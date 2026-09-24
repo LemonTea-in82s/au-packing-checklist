@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d7d8c">
+<title>澳洲行李清单 · 2026</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  :root{
+    --bg:#eef1f5; --card:#fff; --ink:#16212b; --muted:#6b7a8a; --line:#e7ebf0;
+    --accent:#0d7d8c; --accent-2:#0b5f80; --soft:#e2f3f4; --done:#12855e; --done-soft:#e6f6ef;
+    --warn:#b26a00; --danger:#c0392b;
+  }
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:15px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    padding-bottom:calc(28px + env(safe-area-inset-bottom));
+  }
+  /* ---------- header ---------- */
+  header{
+    position:sticky; top:0; z-index:30;
+    background:linear-gradient(135deg,#0d7d8c,#0b5f80 60%,#123a63);
+    color:#fff; padding:calc(14px + env(safe-area-inset-top)) 16px 12px;
+    border-radius:0 0 20px 20px; box-shadow:0 6px 20px rgba(11,95,128,.25);
+  }
+  .h-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .h-title{font-size:17px;font-weight:700;letter-spacing:.3px}
+  .h-sub{font-size:11.5px;opacity:.8;margin-top:2px}
+  .sync{
+    display:inline-flex;align-items:center;gap:6px;font-size:11.5px;
+    background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);
+    padding:5px 10px;border-radius:999px;white-space:nowrap;
+  }
+  .dot{width:7px;height:7px;border-radius:50%;background:#7ef0c8;box-shadow:0 0 0 0 rgba(126,240,200,.7);animation:pulse 2.4s infinite}
+  .sync.busy .dot{background:#ffd27a;animation:pulse 1s infinite}
+  .sync.off .dot{background:#ff9b8a;animation:none}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(126,240,200,.6)}70%{box-shadow:0 0 0 7px rgba(126,240,200,0)}100%{box-shadow:0 0 0 0 rgba(126,240,200,0)}}
+  .bar{margin-top:12px;height:7px;border-radius:99px;background:rgba(255,255,255,.22);overflow:hidden}
+  .bar>i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#7ef0c8,#c8f16f);transition:width .35s cubic-bezier(.2,.8,.3,1)}
+  .h-stat{display:flex;justify-content:space-between;font-size:11.5px;opacity:.92;margin-top:6px}
+  .who{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+  .who button{
+    flex:0 0 auto;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;
+    font-size:12px;padding:5px 11px;border-radius:999px;font-family:inherit;
+  }
+  .who button.on{background:#fff;color:var(--accent-2);font-weight:700;border-color:#fff}
+  /* ---------- filters ---------- */
+  .filters{display:flex;gap:7px;padding:12px 16px 2px;overflow-x:auto;scrollbar-width:none}
+  .filters::-webkit-scrollbar{display:none}
+  .filters button{
+    flex:0 0 auto;font-family:inherit;font-size:12.5px;padding:7px 13px;border-radius:999px;
+    border:1px solid var(--line);background:#fff;color:var(--muted);font-weight:500;
+  }
+  .filters button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+  /* ---------- module ---------- */
+  main{padding:12px 12px 0}
+  .mod{background:var(--card);border-radius:16px;margin-bottom:12px;overflow:hidden;box-shadow:0 2px 10px rgba(22,33,43,.05)}
+  .mod-h{display:flex;align-items:center;gap:10px;padding:14px 14px 12px;cursor:pointer}
+  .mod-i{font-size:20px;line-height:1}
+  .mod-t{flex:1;min-width:0}
+  .mod-t b{display:block;font-size:14.5px}
+  .mod-t span{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+  .mod-c{font-size:12px;color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums}
+  .chev{font-size:11px;color:#b6c1cc;transition:transform .25s}
+  .mod.closed .chev{transform:rotate(-90deg)}
+  .mod.closed .mod-body{display:none}
+  .mod-p{height:3px;background:#eef2f6}
+  .mod-p>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),#3ec4b4);transition:width .3s}
+  .grp{padding:2px 14px 8px}
+  .grp-t{
+    display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:700;color:var(--muted);
+    letter-spacing:.5px;padding:12px 0 6px;border-top:1px dashed var(--line);margin-top:8px
+  }
+  .grp:first-child .grp-t{border-top:0;margin-top:0}
+  .grp-t .tag{font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px;background:var(--soft);color:var(--accent-2)}
+  .grp-t .tag.w{background:#fdeaf3;color:#a12b62}
+  .grp-t .tag.s{background:#f0eee9;color:#6b6252}
+  /* ---------- row ---------- */
+  .row{
+    display:flex;gap:11px;align-items:flex-start;padding:11px 4px;border-radius:11px;
+    cursor:pointer;transition:background .15s,transform .08s;user-select:none;
+  }
+  .row:active{transform:scale(.985)}
+  .row+.row{border-top:1px solid #f4f6f9}
+  .box{
+    flex:0 0 auto;width:21px;height:21px;border-radius:7px;border:1.8px solid #ccd6e0;
+    background:#fff;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all .18s;
+  }
+  .box svg{width:12px;height:12px;opacity:0;transform:scale(.5);transition:all .18s}
+  .row.on .box{background:var(--done);border-color:var(--done)}
+  .row.on .box svg{opacity:1;transform:scale(1)}
+  .txt{flex:1;min-width:0}
+  .nm{font-size:14px;font-weight:600;line-height:1.35;transition:color .18s}
+  .nm em{font-style:normal;font-size:11.5px;font-weight:700;color:var(--accent);background:var(--soft);padding:1px 6px;border-radius:6px;margin-left:5px}
+  .nt{font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.45}
+  .meta{font-size:10.5px;color:#9fb0be;margin-top:4px;display:none}
+  .row.on .nm{color:#9aa8b4;text-decoration:line-through;text-decoration-thickness:1.5px}
+  .row.on .nt{color:#b3bfc9}
+  .row.on .meta{display:block}
+  .row.on{background:var(--done-soft)}
+  /* ---------- footer ---------- */
+  .acts{display:flex;gap:9px;padding:6px 16px 0;flex-wrap:wrap}
+  .acts button{
+    flex:1 1 auto;font-family:inherit;font-size:12.5px;font-weight:600;padding:11px 12px;border-radius:12px;
+    border:1px solid var(--line);background:#fff;color:var(--ink)
+  }
+  .acts button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .acts button.danger{color:var(--danger)}
+  .foot{font-size:11px;color:#9aa8b4;line-height:1.6;padding:16px 16px 0;text-align:center}
+  .toast{
+    position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translate(-50%,20px);
+    background:rgba(22,33,43,.94);color:#fff;font-size:12.5px;padding:10px 16px;border-radius:12px;
+    opacity:0;pointer-events:none;transition:all .25s;z-index:99;max-width:86vw;text-align:center
+  }
+  .toast.on{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-top">
+    <div>
+      <div class="h-title">澳洲行李清单</div>
+      <div class="h-sub">2026-09-25 ~ 10-05 · 悉尼 5 晚 + 墨尔本 4 晚</div>
+    </div>
+    <button class="sync" id="sync" style="font-family:inherit"><span class="dot"></span><span id="syncTxt">连接中…</span></button>
+  </div>
+  <div class="bar"><i id="barAll"></i></div>
+  <div class="h-stat"><span>总进度 <b id="cnt">0 / 0</b></span><span id="pct">0%</span></div>
+  <div class="who">
+    <span style="font-size:11.5px;opacity:.8;align-self:center;margin-right:2px">我是：</span>
+    <button data-who="me">刘启文</button>
+    <button data-who="wife">杨婉靖</button>
+  </div>
+</header>
+
+<div class="filters" id="filters"></div>
+<main id="main"></main>
+
+<div class="acts">
+  <button class="primary" id="btnShare">复制清单链接</button>
+  <button id="btnCollapse">全部收起</button>
+  <button class="danger" id="btnReset">清空勾选</button>
+</div>
+
+<div class="foot">
+  勾选实时同步到云端，你和老婆打开同一链接即可看到对方进度。<br>
+  数据同时保存在本机，断网时照常可勾，恢复后自动上传。<br>
+  清单口径来源：行李打包与穿衣方案 / 衣物数量推算 / 药品清单（2026-09-23 定稿）
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =========================================================
+     1. 清单数据（严格来自三份定稿文件）
+     ========================================================= */
+
+  var GEAR = [
+    { k:"coat",   n:"冲锋衣",        q:"×1", t:"外层：D3–D5、D7–D10；城市凉爽夜晚当外套" },
+    { k:"down",   n:"薄羽绒",        q:"×1", t:"中层+夜间：D3/D8 塞进冲锋衣当中间层，D9 夜企鹅岛单穿" },
+    { k:"sun",    n:"防晒衣",        q:"×1", t:"D2 悉尼 / D5 Kiama / D10 墨尔本 物理防晒" },
+    { k:"shoe",   n:"防水步行鞋",    q:"×1", t:"D8 大洋路必须；全程日均步数高" },
+    { k:"umbrella",n:"折叠伞",       q:"×1", t:"D2 傍晚 20% 阵雨 / D3 60% / D4 50% / D7 41%" },
+    { k:"sunscreen",n:"防晒霜",      q:"×1", t:"春季 UV 6–7（high），晴天必用" },
+    { k:"glasses",n:"墨镜",          q:"×1", t:"D2 / D5 / D10" },
+    { k:"hat",    n:"遮阳帽",        q:"×1", t:"D2 / D5 / D10" },
+    { k:"scarf",  n:"大围巾",        q:"×1", t:"D9 夜企鹅岛海边风寒明显" },
+    { k:"bag",    n:"防水脏衣袋",    q:"×2", t:"9/30 断洗的内衣裤 + 10/2 湿衣隔离" }
+  ];
+
+  var CLOTH_ME = [
+    { k:"tee",   n:"短袖 T恤",   q:"×6", t:"底层全短袖，无长袖/卫衣；冷天靠厚冲锋衣+薄羽绒三层覆盖" },
+    { k:"pants", n:"长裤",       q:"×3", t:"1 速干 + 2 常规；速干裤排 D8（雨+防水鞋日）" },
+    { k:"shorts",n:"短裤",       q:"×1", t:"D2 悉尼 29° / D5 / D7 可选" },
+    { k:"pajama",n:"睡衣",       q:"×1 套", t:"上衣 + 睡裤；酒店空调，兼作 D9 夜备用层" },
+    { k:"under", n:"内裤",       q:"×5", t:"手洗 2 套循环 + 9/30 断档 1 + 2 缓冲" },
+    { k:"socks", n:"袜子",       q:"×6", t:"日均 2 万步 + D3 观鲸 / D8 大洋路汗湿溅湿必换" }
+  ];
+
+  var CLOTH_WIFE = [
+    { k:"tee",   n:"短袖 T恤",     q:"×5", t:"与老公共用洗衣排班；3 天空窗下限 + 出汗日备用" },
+    { k:"long",  n:"长袖 / 卫衣",  q:"×3", t:"2 长袖 + 1 卫衣；D4/D8/D9 内搭 + 凉夜晚" },
+    { k:"pants", n:"长裤",         q:"×3", t:"1 速干 + 2 常规；速干裤排 D8 雨天" },
+    { k:"shorts",n:"短裤",         q:"×1", t:"D2 悉尼 29° 可穿" },
+    { k:"pajama",n:"睡衣",         q:"×1 套", t:"上衣 + 睡裤；酒店空调" },
+    { k:"under", n:"内裤",         q:"×5", t:"手洗 2 套循环 + 9/30 断档 1 + 2 缓冲" },
+    { k:"socks", n:"袜子",         q:"×6", t:"观鲸 / 大洋路日袜子易溅湿，必须换" },
+    { k:"bra",   n:"文胸",         q:"×4", t:"2 天一换 + 手洗（隔夜干）；留疲劳夜冗余" },
+    { k:"dress", n:"连衣裙 / 裙",  q:"×1–2", t:"D2（29° 晴，全程最佳穿裙日）+ D6 市区可选；要两组造型带 2" }
+  ];
+
+  var DRUGS = [
+    { n:"盐酸小檗碱片",              t:"肠道感染性腹泻；与蒙脱石散错开 1 小时服" },
+    { n:"蒙脱石散",                  t:"止泻（非感染性）；腹泻首选，不吸收最安全" },
+    { n:"幸福伤风素（HK 版）",        t:"感冒综合症状；入境卡申报，核对不含 pseudoephedrine 的版本" },
+    { n:"栀子金花丸",                t:"咽喉肿痛 / 口舌生疮；中成药少量自用，入境卡申报" },
+    { n:"茶苯海明片（晕海宁）",       t:"D3 观鲸高速船晕船；上船前 30–60 分钟服" },
+    { n:"氯雷他定",                  t:"过敏（花粉/海鲜）；非嗜睡型，每日 1 片" },
+    { n:"创可贴 ×10",                t:"磨脚 / 擦伤；日均 2 万步" },
+    { n:"驱蚊水",                    t:"蚊虫叮咬；D9 菲利普岛傍晚海边" },
+    { n:"无比滴（JP 版）",            t:"叮咬止痒；外用" },
+    { n:"眼药水",                    t:"眼干 / 视疲劳；人工泪液类" },
+    { n:"叶酸",                      t:"老婆备孕；每天 0.4mg，带足 11 天量" },
+    { n:"头痛散（阿咖酚散）",         t:"头痛 / 发热" },
+    { n:"对乙酰氨基酚单方片",         t:"退烧 / 止痛；全家通用基础药 —— 出发前购买" },
+    { n:"电子体温计",                t:"发烧判断基线；姑姑早晚测一次" },
+    { n:"人工牛黄甲硝唑胶囊",         t:"牙肉肿痛；服药期间及停药后 48h 内禁酒" },
+    { n:"精氨酸布洛芬颗粒",           t:"老婆痛经；与头痛散不同服" }
+  ];
+
+  var TODO = [
+    { n:"购买「对乙酰氨基酚单方片」",  t:"药品清单 #13 标注出发前购买，别漏" },
+    { n:"药品带原包装 + 说明书",       t:"入境卡如实勾选申报（药物声明）" },
+    { n:"9/30 晚：内衣裤装防水脏衣袋",  t:"断洗日（次日 06:00 退房），10/1 穿全新一套" },
+    { n:"9/24 晚 BOM 复核墨尔本抵达日", t:"放出 10/1 预报 → 补全 D7 穿衣" },
+    { n:"9/27 晚 BOM 复核 D8 / D9",     t:"大洋路 14°/8° 雨 + 企鹅岛夜 5–11°，修订保暖方案" }
+  ];
+
+  var MODULES = [
+    {
+      id:"gear", icon:"🧥", title:"模块 1 · 外套与装备",
+      sub:"每人 3 件外套架构；摇粒绒留家（职责被薄羽绒完全覆盖）",
+      groups:[
+        { who:"me",   title:"刘启文", tag:"厚冲锋衣", items:GEAR.map(function(x){return Object.assign({},x,{t: x.k==="coat" ? "厚实款外层：D3–D5、D7–D10；城市凉爽夜晚" : x.t});}) },
+        { who:"wife", title:"杨婉靖", items:GEAR }
+      ]
+    },
+    {
+      id:"cloth", icon:"👕", title:"模块 2 · 衣物件数",
+      sub:"按洗衣节奏推算（大洗 9/27、9/29、10/2、10/4；9/30 断洗）",
+      groups:[
+        { who:"me",   title:"刘启文", tag:"全短袖方案", items:CLOTH_ME },
+        { who:"wife", title:"杨婉靖", items:CLOTH_WIFE }
+      ]
+    },
+    {
+      id:"drug", icon:"💊", title:"模块 3 · 共用药品",
+      sub:"16 项，两人共用一份；澳洲 Chemist Warehouse 遍地可补货",
+      groups:[ { who:"shared", title:"共用", tag:"16 项", items:DRUGS } ]
+    },
+    {
+      id:"todo", icon:"✅", title:"模块 4 · 出发前待办",
+      sub:"三份文件里点名的易漏项",
+      groups:[ { who:"shared", title:"共用", items:TODO } ]
+    }
+  ];
+
+  /* 生成稳定 id */
+  MODULES.forEach(function(m){
+    m.groups.forEach(function(g){
+      g.items = g.items.map(function(it, i){
+        return { id: m.id + "." + g.who + "." + (it.k || ("i" + i)), n: it.n, q: it.q || "", t: it.t || "" };
+      });
+    });
+  });
+
+  /* =========================================================
+     2. 状态与同步
+     ========================================================= */
+
+  var KV = "https://textdb.dev/api/data/au-packing-e8d0b3e710a5e99a-2026";
+  var LS_STATE = "au_pack_state_v1";
+  var LS_WHO   = "au_pack_who";
+
+  var WHO_LABEL = { me:"刘启文", wife:"杨婉靖" };
+
+  var me = localStorage.getItem(LS_WHO) || "me";
+  var state = { v:1, items:{}, seen:{} };
+  var remoteSnapshot = null;
+  var pushTimer = null, pushPending = false, polling = false;
+  var lastSync = 0, offline = false;
+
+  function loadLocal(){
+    try{
+      var raw = localStorage.getItem(LS_STATE);
+      if(raw){ var s = JSON.parse(raw); if(s && s.items) state = s; }
+    }catch(e){}
+  }
+  function saveLocal(){
+    try{ localStorage.setItem(LS_STATE, JSON.stringify(state)); }catch(e){}
+  }
+
+  function merge(a, b){
+    var out = { v:1, items:{}, seen:{} };
+    var ka = Object.keys((a && a.items) || {});
+    var kb = Object.keys((b && b.items) || {});
+    var all = ka.concat(kb);
+    for(var i=0;i<all.length;i++){
+      var k = all[i];
+      if(out.items[k]) continue;
+      var x = a.items ? a.items[k] : null;
+      var y = b.items ? b.items[k] : null;
+      if(!x) out.items[k] = y;
+      else if(!y) out.items[k] = x;
+      else out.items[k] = (x.t >= y.t) ? x : y;
+    }
+    var sa = (a && a.seen) || {}, sb = (b && b.seen) || {};
+    ["me","wife"].forEach(function(w){
+      var v = Math.max(sa[w] || 0, sb[w] || 0);
+      if(v) out.seen[w] = v;
+    });
+    return out;
+  }
+
+  function setSync(status, txt){
+    var el = document.getElementById("sync");
+    var t = document.getElementById("syncTxt");
+    el.className = "sync" + (status === "busy" ? " busy" : status === "off" ? " off" : "");
+    t.textContent = txt;
+  }
+
+  function ago(ts){
+    if(!ts) return "从未";
+    var d = Date.now() - ts;
+    if(d < 8000) return "刚刚";
+    if(d < 60000) return Math.floor(d/1000) + " 秒前";
+    if(d < 3600000) return Math.floor(d/60000) + " 分钟前";
+    return Math.floor(d/3600000) + " 小时前";
+  }
+
+  function refreshSyncLabel(){
+    if(offline){ setSync("off", "离线 · 本地保存"); return; }
+    setSync("", "已同步 " + ago(lastSync));
+  }
+
+  function pull(cb){
+    fetch(KV, { cache:"no-store" })
+      .then(function(r){ if(!r.ok) throw new Error("http " + r.status); return r.json(); })
+      .then(function(remote){
+        offline = false; lastSync = Date.now();
+        var before = JSON.stringify(state.items);
+        state = merge(state, remote);
+        remoteSnapshot = remote;
+        if(JSON.stringify(state.items) !== before){ saveLocal(); render(); }
+        refreshSyncLabel();
+        if(cb) cb(null);
+      })
+      .catch(function(e){
+        offline = true; refreshSyncLabel();
+        if(cb) cb(e);
+      });
+  }
+
+  function push(){
+    if(pushPending) return;
+    pushPending = true;
+    setSync("busy", "同步中…");
+    fetch(KV, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify(state)
+    })
+      .then(function(r){ if(!r.ok) throw new Error("http " + r.status); return r.text(); })
+      .then(function(){
+        offline = false; lastSync = Date.now(); remoteSnapshot = JSON.parse(JSON.stringify(state)); refreshSyncLabel();
+      })
+      .catch(function(){ offline = true; refreshSyncLabel(); })
+      .then(function(){
+        pushPending = false;
+        if(pushTimer === null && pendingDirty){ pendingDirty = false; schedulePush(); }
+      });
+  }
+
+  var pendingDirty = false;
+  function schedulePush(){
+    if(pushTimer) clearTimeout(pushTimer);
+    pushTimer = setTimeout(function(){
+      pushTimer = null;
+      if(pushPending){ pendingDirty = true; } else { push(); }
+    }, 500);
+  }
+
+  /* =========================================================
+     3. 渲染
+     ========================================================= */
+
+  var filter = "all", collapsed = {};
+
+  function allItems(){
+    var out = [];
+    MODULES.forEach(function(m){
+      m.groups.forEach(function(g){
+        g.items.forEach(function(it){ out.push({ m:m, g:g, it:it }); });
+      });
+    });
+    return out;
+  }
+  var ALL = allItems();
+
+  function isOn(id){ return state.items[id] && state.items[id].c === 1; }
+
+  function renderFilters(){
+    var f = document.getElementById("filters");
+    var defs = [["all","全部"],["me","刘启文"],["wife","杨婉靖"],["shared","共用"]];
+    f.innerHTML = defs.map(function(d){
+      return '<button data-f="' + d[0] + '"' + (filter === d[0] ? ' class="on"' : '') + '>' + d[1] + '</button>';
+    }).join("");
+    Array.prototype.forEach.call(f.querySelectorAll("button"), function(b){
+      b.onclick = function(){ filter = b.getAttribute("data-f"); render(); };
+    });
+  }
+
+  function render(){
+    renderFilters();
+
+    var total = 0, done = 0;
+    ALL.forEach(function(x){
+      if(filter !== "all" && x.g.who !== filter && !(filter === "shared" && x.g.who === "shared")) return;
+      total++; if(isOn(x.it.id)) done++;
+    });
+    var p = total ? Math.round(done / total * 100) : 0;
+    document.getElementById("barAll").style.width = p + "%";
+    document.getElementById("cnt").textContent = done + " / " + total;
+    document.getElementById("pct").textContent = p + "%";
+
+    var html = "";
+    MODULES.forEach(function(m){
+      var mTotal = 0, mDone = 0, body = "";
+
+      m.groups.forEach(function(g){
+        var rows = "";
+        g.items.forEach(function(it){
+          if(filter !== "all" && g.who !== filter && !(filter === "shared" && g.who === "shared")) return;
+          mTotal++;
+          var on = isOn(it.id);
+          if(on) mDone++;
+          var rec = state.items[it.id];
+          var meta = on && rec ? ("已勾选 · " + (WHO_LABEL[rec.b] || "我") + " · " + ago(rec.t)) : "";
+          rows += '<div class="row' + (on ? ' on' : '') + '" data-id="' + it.id + '">'
+                +   '<span class="box"><svg viewBox="0 0 12 12" fill="none"><path d="M1.5 6.3L4.4 9.2L10.5 3" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg></span>'
+                +   '<span class="txt">'
+                +     '<span class="nm">' + it.n + (it.q ? '<em>' + it.q + '</em>' : '') + '</span>'
+                +     (it.t ? '<span class="nt">' + it.t + '</span>' : '')
+                +     (meta ? '<span class="meta">' + meta + '</span>' : '')
+                +   '</span>'
+                + '</div>';
+        });
+        if(!rows) return;
+        var tagCls = g.who === "wife" ? " w" : (g.who === "shared" ? " s" : "");
+        body += '<div class="grp"><div class="grp-t">' + g.title
+              + (g.tag ? '<span class="tag' + tagCls + '">' + g.tag + '</span>' : '')
+              + '</div>' + rows + '</div>';
+      });
+
+      if(!body) return;
+      var closed = collapsed[m.id] ? " closed" : "";
+      html += '<div class="mod' + closed + '" data-mod="' + m.id + '">'
+            +   '<div class="mod-h" data-toggle="' + m.id + '">'
+            +     '<span class="mod-i">' + m.icon + '</span>'
+            +     '<span class="mod-t"><b>' + m.title + '</b><span>' + m.sub + '</span></span>'
+            +     '<span class="mod-c">' + mDone + '/' + mTotal + '</span>'
+            +     '<span class="chev">▼</span>'
+            +   '</div>'
+            +   '<div class="mod-p"><i style="width:' + (mTotal ? Math.round(mDone/mTotal*100) : 0) + '%"></i></div>'
+            +   '<div class="mod-body">' + body + '</div>'
+            + '</div>';
+    });
+
+    document.getElementById("main").innerHTML = html;
+
+    Array.prototype.forEach.call(document.querySelectorAll(".mod-h"), function(h){
+      h.onclick = function(){
+        var id = h.getAttribute("data-toggle");
+        collapsed[id] = !collapsed[id];
+        h.parentNode.classList.toggle("closed", collapsed[id]);
+      };
+    });
+
+    Array.prototype.forEach.call(document.querySelectorAll(".row"), function(r){
+      r.onclick = function(){ toggle(r.getAttribute("data-id")); };
+    });
+  }
+
+  function toggle(id){
+    var on = isOn(id);
+    state.items[id] = { c: on ? 0 : 1, t: Date.now(), b: me };
+    state.seen[me] = Date.now();
+    saveLocal(); render(); schedulePush();
+    if(navigator.vibrate) navigator.vibrate(8);
+  }
+
+  /* =========================================================
+     4. 交互
+     ========================================================= */
+
+  function toast(msg){
+    var el = document.getElementById("toast");
+    el.textContent = msg; el.classList.add("on");
+    clearTimeout(el._t); el._t = setTimeout(function(){ el.classList.remove("on"); }, 1900);
+  }
+
+  function renderWho(){
+    Array.prototype.forEach.call(document.querySelectorAll(".who button"), function(b){
+      b.classList.toggle("on", b.getAttribute("data-who") === me);
+      b.onclick = function(){
+        me = b.getAttribute("data-who");
+        localStorage.setItem(LS_WHO, me);
+        renderWho(); render(); toast("已切换为 " + WHO_LABEL[me]);
+      };
+    });
+  }
+
+  document.getElementById("btnShare").onclick = function(){
+    var url = location.href;
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(function(){ toast("链接已复制，微信发给老婆即可"); },
+        function(){ toast("复制失败，请手动复制地址栏"); });
+    }else{ toast("请手动复制地址栏链接"); }
+  };
+
+  document.getElementById("btnCollapse").onclick = function(){
+    var anyOpen = MODULES.some(function(m){ return !collapsed[m.id]; });
+    MODULES.forEach(function(m){ collapsed[m.id] = anyOpen; });
+    document.getElementById("btnCollapse").textContent = anyOpen ? "全部展开" : "全部收起";
+    render();
+  };
+
+  document.getElementById("btnReset").onclick = function(){
+    if(!confirm("确定清空所有勾选？（云端也会同步清空）")) return;
+    state.items = {}; state.seen[me] = Date.now();
+    saveLocal(); render(); schedulePush(); toast("已清空");
+  };
+
+  document.getElementById("sync").onclick = function(){
+    toast("手动同步中…"); pull(function(e){ toast(e ? "同步失败，已离线保存" : "同步完成"); });
+  };
+
+  /* =========================================================
+     5. 启动
+     ========================================================= */
+
+  loadLocal();
+  renderWho();
+  render();
+  pull();
+
+  setInterval(function(){
+    if(document.hidden) return;
+    if(polling) return;
+    polling = true;
+    pull(function(){ polling = false; });
+  }, 6000);
+
+  document.addEventListener("visibilitychange", function(){
+    if(!document.hidden) pull();
+  });
+  window.addEventListener("online", function(){ pull(); });
+  window.addEventListener("pagehide", function(){
+    try{
+      navigator.sendBeacon && navigator.sendBeacon(KV, new Blob([JSON.stringify(state)], { type:"application/json" }));
+    }catch(e){}
+  });
+})();
+</script>
+</body>
+</html>
