@@ -331,13 +331,20 @@
 
   function pull(cb){
     fetch(KV, { cache:"no-store" })
-      .then(function(r){ if(!r.ok) throw new Error("http " + r.status); return r.json(); })
-      .then(function(remote){
+      .then(function(r){ if(!r.ok) throw new Error("http " + r.status); return r.text(); })
+      .then(function(txt){
+        // 云端首次为空时返回 200 + 空 body，需按“暂无云端数据”处理，不能当成失败
+        var remote = null;
+        if(txt && txt.trim()){
+          try{ remote = JSON.parse(txt); }catch(e){ remote = null; }
+        }
         offline = false; lastSync = Date.now();
-        var before = JSON.stringify(state.items);
-        state = merge(state, remote);
-        remoteSnapshot = remote;
-        if(JSON.stringify(state.items) !== before){ saveLocal(); render(); }
+        if(remote && remote.items){
+          var before = JSON.stringify(state.items);
+          state = merge(state, remote);
+          remoteSnapshot = remote;
+          if(JSON.stringify(state.items) !== before){ saveLocal(); render(); }
+        }
         refreshSyncLabel();
         if(cb) cb(null);
       })
